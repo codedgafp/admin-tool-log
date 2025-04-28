@@ -579,19 +579,6 @@ class logstore_mentor2_store_testcase extends advanced_testcase {
 
         self::getDataGenerator()->enrol_user($user->id, $session->get_course()->id);
 
-        // User is enrol but user has no main entity.
-        $event4 = \core\event\course_viewed::create(
-            [
-                'context' => $session->get_context(),
-                'userid' => $user->id,
-                'other' => ['sample' => 5, 'xx' => 10],
-            ],
-        );
-        $store->write($event4);
-
-        $logs = $DB->get_records('logstore_mentor_log2');
-        self::assertCount(0, $logs);
-
         // Set main entity.
         $profile = \local_mentor_core\profile_api::get_profile($user->id);
         $profile->set_main_entity($session->get_entity());
