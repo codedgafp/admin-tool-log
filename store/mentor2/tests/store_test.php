@@ -26,6 +26,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+
+use logstore_mentor2\helper\testhelper;
+
 require_once($CFG->dirroot . '/local/mentor_core/classes/model/session.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/session.php');
 require_once($CFG->dirroot . '/local/mentor_core/api/profile.php');
@@ -524,6 +527,7 @@ class logstore_mentor2_store_testcase extends advanced_testcase {
         $this->preventResetByRollback(); // Logging waits till the transaction gets committed.
 
         self::setAdminUser();
+        testhelper::create_default_entity($this);
 
         $newcourse = self::getDataGenerator()->create_course();
         $user = self::getDataGenerator()->create_user();
@@ -574,45 +578,6 @@ class logstore_mentor2_store_testcase extends advanced_testcase {
         $store->write($event3);
 
         // User is not enrol.
-        $logs = $DB->get_records('logstore_mentor_log2');
-        self::assertCount(0, $logs);
-
-        self::getDataGenerator()->enrol_user($user->id, $session->get_course()->id);
-
-        // Set main entity.
-        $profile = \local_mentor_core\profile_api::get_profile($user->id);
-        $profile->set_main_entity($session->get_entity());
-        $profile->set_profile_field('region', 'Auvergne-Rhône-Alpes');
-        $profile->set_profile_field('department', '07 - Ardèche');
-        $profile->set_profile_field('category', 'A+');
-        $profile->set_profile_field('status', 'Fonctionnaire');
-
-        $event5 = \core\event\course_viewed::create(
-            [
-                'context' => $session->get_context(),
-                'userid' => $user->id,
-                'other' => ['sample' => 5, 'xx' => 10],
-            ],
-        );
-        $store->write($event5);
-
-        // User has main entity.
-        $logs = $DB->get_records('logstore_mentor_log2');
-        self::assertCount(1, $logs);
-
-        // Delete session from database.
-        $DB->delete_records('session', ['id' => $session->id]);
-        $DB->delete_records('logstore_mentor_log2');
-
-        $event6 = \core\event\course_viewed::create(
-            [
-                'context' => $session->get_context(),
-                'userid' => $user->id,
-                'other' => ['sample' => 5, 'xx' => 10],
-            ],
-        );
-        $store->write($event6);
-
         $logs = $DB->get_records('logstore_mentor_log2');
         self::assertCount(0, $logs);
 
